@@ -1,0 +1,21 @@
+<h2>Match Score: {{ score }}%</h2>
+
+<h3>Skills Found</h3>
+<ul>
+  {% for s in skills %}<li>{{ s }}</li>{% endfor %}
+</ul>
+
+<h3>Missing Skills</h3>
+<ul>
+  {% for m in missing_skills %}<li>{{ m }}</li>{% endfor %}
+</ul>
+
+<h3>Recommended Jobs</h3>
+<ul>
+  {% for job in jobs %}
+    <li>
+      {{ job.title }} ({{ job.match }}%)
+      <a href="{{ job.apply_link }}" target="_blank">Apply</a>
+    </li>
+  {% endfor %}
+</ul>

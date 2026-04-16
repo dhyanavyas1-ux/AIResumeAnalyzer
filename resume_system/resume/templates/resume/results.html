@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Resume Analysis Results</title>
+</head>
+<body>
+    <h1>Resume Analysis for {{ resume.name }}</h1>
+    <h2>Extracted Skills</h2>
+    <ul>
+        {% for skill in skills %}
+        <li>{{ skill }}</li>
+        {% endfor %}
+    </ul>
+    <h2>Recommended Jobs</h2>
+    <ul>
+        {% for job in jobs %}
+        <li>{{ job.title }} at {{ job.company }} - {{ job.match }}% match
+            <a href="{{ job.apply_link }}">Apply</a>
+        </li>
+        {% endfor %}
+    </ul>
+</body>
+</html>
