@@ -1,327 +1,462 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Upload Resume - AI Resume Analyzer</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+{% extends "base.html" %}
+{% block title %}Upload Resume — AI Resume Analyzer{% endblock %}
+{% block nav_upload %}active{% endblock %}
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 40px 20px;
-        }
+{% block head_extra %}
+<style>
+    .upload-page {
+        min-height: calc(100vh - var(--nav-height));
+        padding: 60px clamp(16px, 4vw, 48px);
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+        background: radial-gradient(ellipse 50% 50% at 80% 20%, rgba(99,102,241,0.1) 0%, transparent 70%);
+    }
 
-        .container {
-            max-width: 700px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-            overflow: hidden;
-        }
+    .upload-container {
+        width: 100%;
+        max-width: 760px;
+    }
 
-        .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 40px 30px;
-            text-align: center;
-        }
+    /* Page header */
+    .upload-header { text-align: center; margin-bottom: 40px; }
+    .upload-header-icon {
+        width: 64px; height: 64px;
+        background: linear-gradient(135deg, var(--clr-brand-from), var(--clr-brand-to));
+        border-radius: var(--radius-lg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 28px;
+        margin: 0 auto 20px;
+        box-shadow: var(--shadow-brand);
+    }
 
-        .header h1 {
-            font-size: 32px;
-            margin-bottom: 10px;
-        }
+    .upload-header h1 {
+        font-size: 2rem;
+        font-weight: 800;
+        letter-spacing: -0.03em;
+        margin-bottom: 10px;
+    }
 
-        .header p {
-            opacity: 0.95;
-            font-size: 16px;
-        }
+    .upload-header p { color: var(--clr-text-muted); font-size: 0.97rem; }
 
-        .content {
-            padding: 40px 30px;
-        }
+    /* Form card */
+    .upload-card {
+        background: var(--clr-surface);
+        border: 1px solid var(--clr-border-light);
+        border-radius: var(--radius-xl);
+        padding: 36px;
+        box-shadow: var(--shadow-md);
+    }
 
-        .upload-zone {
-            border: 2px dashed #667eea;
-            border-radius: 10px;
-            padding: 40px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s;
-            background: #f8f9ff;
-            margin-bottom: 30px;
-        }
+    /* Drop zone */
+    .drop-zone {
+        border: 2px dashed var(--clr-border);
+        border-radius: var(--radius-lg);
+        padding: 48px 24px;
+        text-align: center;
+        cursor: pointer;
+        transition: all var(--transition);
+        background: rgba(99,102,241,0.03);
+        position: relative;
+        margin-bottom: 28px;
+    }
 
-        .upload-zone:hover {
-            border-color: #764ba2;
-            background: #f0f2ff;
-        }
+    .drop-zone:hover,
+    .drop-zone.dragover {
+        border-color: var(--clr-brand-from);
+        background: rgba(99,102,241,0.08);
+    }
 
-        .upload-zone.dragover {
-            border-color: #764ba2;
-            background: #e8ebff;
-        }
+    .drop-zone-icon {
+        font-size: 44px;
+        margin-bottom: 14px;
+        display: block;
+    }
 
-        .upload-icon {
-            font-size: 48px;
-            margin-bottom: 15px;
-        }
+    .drop-zone-title {
+        font-size: 1rem;
+        font-weight: 600;
+        margin-bottom: 6px;
+    }
 
-        .upload-zone p {
-            color: #666;
-            margin-bottom: 5px;
-            font-size: 16px;
-        }
+    .drop-zone-sub {
+        font-size: 0.83rem;
+        color: var(--clr-text-muted);
+        margin-bottom: 18px;
+    }
 
-        .upload-zone span {
-            color: #667eea;
-            font-weight: 600;
-            cursor: pointer;
-        }
+    .drop-zone-browse {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 9px 20px;
+        background: rgba(99,102,241,0.14);
+        border: 1.5px solid rgba(99,102,241,0.35);
+        border-radius: var(--radius-full);
+        color: #a5b4fc;
+        font-size: 0.85rem;
+        font-weight: 600;
+        transition: all var(--transition);
+    }
 
-        .upload-zone small {
-            color: #999;
-            display: block;
-            margin-top: 10px;
-        }
+    .drop-zone:hover .drop-zone-browse {
+        background: var(--clr-brand-from);
+        color: #fff;
+    }
 
-        .file-input {
-            display: none;
-        }
+    .drop-zone-input { display: none; }
 
-        .form-group {
-            margin-bottom: 20px;
-        }
+    /* File selected indicator */
+    .file-indicator {
+        display: none;
+        align-items: center;
+        gap: 12px;
+        background: rgba(16,185,129,0.1);
+        border: 1px solid rgba(16,185,129,0.25);
+        border-radius: var(--radius-md);
+        padding: 12px 16px;
+        margin-bottom: 28px;
+    }
 
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            color: #555;
-            font-weight: 500;
-        }
+    .file-indicator.show { display: flex; }
 
-        .form-group input {
-            width: 100%;
-            padding: 12px 15px;
-            border: 2px solid #e0e0e0;
-            border-radius: 5px;
-            font-size: 14px;
-            transition: border-color 0.3s;
-        }
+    .file-type-icon {
+        width: 36px; height: 36px;
+        border-radius: 8px;
+        background: rgba(16,185,129,0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        flex-shrink: 0;
+    }
 
-        .form-group input:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-        }
+    .file-name { font-size: 0.88rem; font-weight: 600; color: #6ee7b7; }
+    .file-size { font-size: 0.75rem; color: var(--clr-text-subtle); }
 
-        .button-group {
-            display: flex;
-            gap: 10px;
-            margin-top: 30px;
-        }
+    .file-remove {
+        margin-left: auto;
+        background: none;
+        border: none;
+        color: var(--clr-text-subtle);
+        cursor: pointer;
+        font-size: 18px;
+        line-height: 1;
+        transition: color var(--transition);
+    }
+    .file-remove:hover { color: var(--clr-danger); }
 
-        .submit-btn {
-            flex: 1;
-            padding: 12px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 5px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
+    /* JD Textarea section */
+    .section-label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.88rem;
+        font-weight: 700;
+        color: var(--clr-text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        margin-bottom: 16px;
+    }
 
-        .submit-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
-        }
+    .form-group { margin-bottom: 28px; }
 
-        .submit-btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
+    .form-textarea {
+        width: 100%;
+        min-height: 160px;
+        padding: 14px 16px;
+        background: var(--clr-bg);
+        border: 1.5px solid var(--clr-border);
+        border-radius: var(--radius-md);
+        color: var(--clr-text);
+        font-size: 0.9rem;
+        line-height: 1.6;
+        resize: vertical;
+        transition: border-color var(--transition), box-shadow var(--transition);
+        outline: none;
+        font-family: inherit;
+    }
 
-        .back-btn {
-            flex: 1;
-            padding: 12px;
-            background: #f0f0f0;
-            color: #667eea;
-            border: 2px solid #667eea;
-            border-radius: 5px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            text-decoration: none;
-            display: inline-block;
-            text-align: center;
-        }
+    .form-textarea::placeholder { color: var(--clr-text-subtle); }
+    .form-textarea:focus {
+        border-color: var(--clr-brand-from);
+        box-shadow: 0 0 0 3px rgba(99,102,241,0.15);
+    }
 
-        .back-btn:hover {
-            background: #667eea;
-            color: white;
-        }
+    .char-count { text-align: right; font-size: 0.75rem; color: var(--clr-text-subtle); margin-top: 6px; }
 
-        .file-info {
-            background: #e8f5e9;
-            border-left: 4px solid #4caf50;
-            padding: 12px;
-            border-radius: 5px;
-            margin-bottom: 20px;
-            display: none;
-        }
+    /* What we analyze */
+    .analyze-list {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        margin-bottom: 28px;
+    }
 
-        .file-info.show {
-            display: block;
-        }
+    .analyze-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.83rem;
+        color: var(--clr-text-muted);
+    }
 
-        .file-info p {
-            color: #2e7d32;
-            font-size: 14px;
-        }
+    .analyze-dot {
+        width: 6px; height: 6px;
+        border-radius: 50%;
+        background: var(--clr-brand-from);
+        flex-shrink: 0;
+    }
 
-        .requirements {
-            background: #f5f5f5;
-            padding: 20px;
-            border-radius: 5px;
-            margin-top: 30px;
-        }
+    /* Action buttons */
+    .upload-actions {
+        display: flex;
+        gap: 12px;
+    }
 
-        .requirements h4 {
-            margin-bottom: 10px;
-            color: #333;
-        }
+    .btn-submit {
+        flex: 1;
+        padding: 14px;
+        background: linear-gradient(135deg, var(--clr-brand-from), var(--clr-brand-to));
+        color: #fff;
+        border: none;
+        border-radius: var(--radius-full);
+        font-size: 0.97rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all var(--transition);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
 
-        .requirements ul {
-            list-style: none;
-            padding-left: 0;
-        }
+    .btn-submit:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-brand);
+    }
 
-        .requirements li {
-            padding: 5px 0;
-            color: #666;
-            font-size: 14px;
-        }
+    .btn-submit:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+    }
 
-        .requirements li:before {
-            content: '✓ ';
-            color: #4caf50;
-            font-weight: bold;
-            margin-right: 8px;
-        }
+    .btn-cancel {
+        padding: 14px 24px;
+        background: transparent;
+        color: var(--clr-text-muted);
+        border: 1.5px solid var(--clr-border);
+        border-radius: var(--radius-full);
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all var(--transition);
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
 
-        @media (max-width: 600px) {
-            .header h1 {
-                font-size: 24px;
-            }
+    .btn-cancel:hover {
+        border-color: var(--clr-text-muted);
+        color: var(--clr-text);
+    }
 
-            .button-group {
-                flex-direction: column;
-            }
+    /* Loading overlay */
+    .loading-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.85);
+        backdrop-filter: blur(8px);
+        z-index: 999;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 20px;
+    }
 
-            .content {
-                padding: 20px;
-            }
+    .loading-overlay.show { display: flex; }
 
-            .upload-zone {
-                padding: 20px;
-            }
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>📄 Upload Your Resume</h1>
-            <p>Let's analyze your resume and find the perfect job match</p>
+    .loading-spinner {
+        width: 56px; height: 56px;
+        border: 4px solid rgba(99,102,241,0.2);
+        border-top-color: var(--clr-brand-from);
+        border-radius: 50%;
+        animation: spin 0.9s linear infinite;
+    }
+
+    .loading-text { font-size: 1.1rem; font-weight: 600; color: var(--clr-text); }
+    .loading-sub  { font-size: 0.85rem; color: var(--clr-text-muted); }
+
+    @media (max-width: 600px) {
+        .analyze-list { grid-template-columns: 1fr; }
+        .upload-actions { flex-direction: column; }
+        .upload-card { padding: 24px 18px; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-spinner"></div>
+    <div class="loading-text">Analyzing your resume…</div>
+    <div class="loading-sub">NLP engine extracting skills & computing match score</div>
+</div>
+
+<div class="upload-page">
+    <div class="upload-container animate-fade-up">
+
+        <!-- Header -->
+        <div class="upload-header">
+            <div class="upload-header-icon">📄</div>
+            <h1>Upload Your Resume</h1>
+            <p>Get an instant AI-powered analysis against any job description in under 30 seconds.</p>
         </div>
 
-        <div class="content">
-            <form method="post" enctype="multipart/form-data" id="uploadForm">
+        <!-- Form Card -->
+        <div class="upload-card">
+            <form method="POST" enctype="multipart/form-data" id="uploadForm">
                 {% csrf_token %}
 
-                <div class="upload-zone" id="uploadZone">
-                    <div class="upload-icon">📤</div>
-                    <p>Drop your resume here or <span id="uploadText">click to browse</span></p>
-                    <small>Supported formats: PDF, DOCX (Max 10MB)</small>
-                    <input type="file" name="file" id="fileInput" class="file-input" accept=".pdf,.docx" required>
+                <!-- ── Step 1: File Upload ── -->
+                <div class="section-label">
+                    <span style="background:linear-gradient(135deg,var(--clr-brand-from),var(--clr-brand-to));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">01</span>
+                    Upload Resume File
                 </div>
 
-                <div class="file-info" id="fileInfo">
-                    <p>✓ File selected: <strong id="fileName"></strong></p>
+                <div class="drop-zone" id="dropZone">
+                    <span class="drop-zone-icon">📤</span>
+                    <div class="drop-zone-title">Drag & drop your resume here</div>
+                    <div class="drop-zone-sub">PDF or DOCX format, maximum 5 MB</div>
+                    <div class="drop-zone-browse">📂 Browse Files</div>
+                    <input type="file" name="file" id="fileInput" class="drop-zone-input" accept=".pdf,.docx" required>
+                </div>
+
+                <div class="file-indicator" id="fileIndicator">
+                    <div class="file-type-icon" id="fileTypeIcon">📄</div>
+                    <div>
+                        <div class="file-name" id="fileName">filename.pdf</div>
+                        <div class="file-size" id="fileSize">0 KB</div>
+                    </div>
+                    <button type="button" class="file-remove" id="fileRemove" title="Remove file">✕</button>
+                </div>
+
+                <!-- ── Step 2: Job Description ── -->
+                <div class="section-label">
+                    <span style="background:linear-gradient(135deg,var(--clr-brand-from),var(--clr-brand-to));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">02</span>
+                    Paste Job Description
                 </div>
 
                 <div class="form-group">
-                    <label for="id_job_description">Job Description</label>
-                    <textarea id="id_job_description" name="job_description" required placeholder="Enter the job description" style="width: 100%; padding: 12px 15px; border: 2px solid #e0e0e0; border-radius: 5px; font-size: 14px; font-family: Arial, sans-serif; min-height: 120px;"></textarea>
+                    <textarea
+                        id="id_job_description"
+                        name="job_description"
+                        class="form-textarea"
+                        placeholder="Paste the full job description here — the more detail you include, the more accurate your match score will be…"
+                        required
+                        maxlength="5000"
+                    ></textarea>
+                    <div class="char-count"><span id="charCount">0</span> / 5000 characters</div>
                 </div>
 
-                <div class="requirements">
-                    <h4>What We Analyze:</h4>
-                    <ul>
-                        <li>Technical Skills & Expertise</li>
-                        <li>Professional Experience</li>
-                        <li>Education & Certifications</li>
-                        <li>Key Keywords & Technologies</li>
-                    </ul>
+                <!-- ── What we analyze ── -->
+                <div class="section-label" style="margin-bottom:12px;">What We Analyze</div>
+                <div class="analyze-list">
+                    <div class="analyze-item"><div class="analyze-dot"></div>Technical Skills & Keywords</div>
+                    <div class="analyze-item"><div class="analyze-dot"></div>ATS Readability Score</div>
+                    <div class="analyze-item"><div class="analyze-dot"></div>Skill Gap Identification</div>
+                    <div class="analyze-item"><div class="analyze-dot"></div>Grammar & Tone Quality</div>
+                    <div class="analyze-item"><div class="analyze-dot"></div>Match Percentage Score</div>
+                    <div class="analyze-item"><div class="analyze-dot"></div>Live Job Opportunities</div>
                 </div>
 
-                <div class="button-group">
-                    <button type="submit" class="submit-btn">Analyze Resume</button>
-                    <a href="{% url 'upload_resume' %}" class="back-btn">Cancel</a>
+                <!-- ── Actions ── -->
+                <div class="upload-actions">
+                    <button type="submit" class="btn-submit" id="analyzeBtn" disabled>
+                        Analyze Resume
+                    </button>
+                    <a href="{% url 'home' %}" class="btn-cancel">Cancel</a>
                 </div>
+
             </form>
         </div>
+
     </div>
+</div>
+{% endblock %}
 
-    <script>
-        const uploadZone = document.getElementById('uploadZone');
-        const fileInput = document.getElementById('fileInput');
-        const fileInfo = document.getElementById('fileInfo');
-        const fileName = document.getElementById('fileName');
+{% block scripts %}
+<script>
+    const dropZone     = document.getElementById('dropZone');
+    const fileInput    = document.getElementById('fileInput');
+    const fileIndicator = document.getElementById('fileIndicator');
+    const fileName     = document.getElementById('fileName');
+    const fileSize     = document.getElementById('fileSize');
+    const fileTypeIcon = document.getElementById('fileTypeIcon');
+    const fileRemove   = document.getElementById('fileRemove');
+    const analyzeBtn   = document.getElementById('analyzeBtn');
+    const jdTextarea   = document.getElementById('id_job_description');
+    const charCount    = document.getElementById('charCount');
+    const loadingOverlay = document.getElementById('loadingOverlay');
 
-        // Click to upload
-        uploadZone.addEventListener('click', () => fileInput.click());
+    // ── Drag & Drop ──────────────────────────────────────────────────────────
+    dropZone.addEventListener('click', () => fileInput.click());
 
-        // Drag and drop
-        uploadZone.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            uploadZone.classList.add('dragover');
-        });
-
-        uploadZone.addEventListener('dragleave', () => {
-            uploadZone.classList.remove('dragover');
-        });
-
-        uploadZone.addEventListener('drop', (e) => {
-            e.preventDefault();
-            uploadZone.classList.remove('dragover');
+    dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); });
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+    dropZone.addEventListener('drop', e => {
+        e.preventDefault();
+        dropZone.classList.remove('dragover');
+        if (e.dataTransfer.files.length) {
             fileInput.files = e.dataTransfer.files;
-            updateFileInfo();
-        });
-
-        // File selection
-        fileInput.addEventListener('change', updateFileInfo);
-
-        function updateFileInfo() {
-            if (fileInput.files.length > 0) {
-                const file = fileInput.files[0];
-                fileName.textContent = file.name;
-                fileInfo.classList.add('show');
-            } else {
-                fileInfo.classList.remove('show');
-            }
+            handleFile(e.dataTransfer.files[0]);
         }
-    </script>
-</body>
-</html>
+    });
+
+    fileInput.addEventListener('change', () => {
+        if (fileInput.files.length) handleFile(fileInput.files[0]);
+    });
+
+    function handleFile(file) {
+        fileName.textContent   = file.name;
+        fileSize.textContent   = formatBytes(file.size);
+        fileTypeIcon.textContent = file.name.endsWith('.pdf') ? '🔴' : '📘';
+        fileIndicator.classList.add('show');
+        checkReady();
+    }
+
+    function formatBytes(bytes) {
+        if (bytes < 1024) return bytes + ' B';
+        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+        return (bytes / 1024 / 1024).toFixed(1) + ' MB';
+    }
+
+    fileRemove.addEventListener('click', () => {
+        fileInput.value = '';
+        fileIndicator.classList.remove('show');
+        checkReady();
+    });
+
+    // ── Char counter ──────────────────────────────────────────────────────────
+    jdTextarea.addEventListener('input', () => {
+        charCount.textContent = jdTextarea.value.length;
+        checkReady();
+    });
+
+    // ── Enable submit only when both file + JD are filled ─────────────────
+    function checkReady() {
+        const hasFile = fileInput.files && fileInput.files.length > 0;
+        const hasJD   = jdTextarea.value.trim().length > 20;
+        analyzeBtn.disabled = !(hasFile && hasJD);
+    }
+
+    // ── Loading overlay on submit ──────────────────────────────────────────
+    document.getElementById('uploadForm').addEventListener('submit', () => {
+        loadingOverlay.classList.add('show');
+    });
+</script>
+{% endblock %}

@@ -1,6 +1,7 @@
 from django.test import TestCase
 
 from analyzer.nlp_engine import ai_grammar_integrity_check, ai_tone_authenticity_check, detect_spelling_errors, detect_grammar_errors, ai_content_likelihood
+from analyzer.skill_matcher import get_dynamic_skills, skill_match 
 
 
 class NLPEngineTests(TestCase):
@@ -40,3 +41,49 @@ class NLPEngineTests(TestCase):
         score = ai_content_likelihood('This resume mentions AI, ChatGPT and OpenAI many times.')
         self.assertGreaterEqual(score, 20)
 
+class SkillMatcherTests(TestCase):
+
+    def test_get_dynamic_skills_filtering(self):
+        """Test that it filters out basic words and keeps actual skills based on skills.json"""
+        text = "I have the ability to build applications using Python, Django, and SQL."
+        skills = get_dynamic_skills(text)
+        
+        # These should be found
+        self.assertIn('python', skills)
+        self.assertIn('django', skills)
+        self.assertIn('sql', skills)
+        
+        # These generic nouns should NOT be found anymore!
+        self.assertNotIn('ability', skills)
+        self.assertNotIn('applications', skills)
+
+    def test_get_dynamic_skills_multi_word(self):
+        """Test that multi-word skills are detected correctly without splitting"""
+        text = "Experience with Machine Learning, Data Structures, and React."
+        skills = get_dynamic_skills(text)
+        
+        self.assertIn('machine learning', skills)
+        self.assertIn('data structures', skills)
+        self.assertIn('react', skills)
+
+    def test_get_dynamic_skills_boundaries(self):
+        """Test that short skills don't falsely trigger inside other words"""
+        # 'c' is inside 'React' and 'clean', 'go' is inside 'Django'
+        text = "I use React to write clean code. I also like Django."
+        skills = get_dynamic_skills(text)
+        
+        self.assertNotIn('c', skills)
+        self.assertNotIn('go', skills)
+        self.assertIn('react', skills)
+        self.assertIn('django', skills)
+
+    def test_skill_match_scoring(self):
+        """Test the final scoring math and difference logic"""
+        resume = "I know Python, SQL, and AWS."
+        jd = "Looking for a Python backend developer with SQL, AWS, and Docker experience."
+        
+        score, matched, missing = skill_match(resume, jd)
+        
+        self.assertEqual(len(matched), 3) # python, sql, aws
+        self.assertIn('docker', missing)
+        self.assertEqual(score, 75) # 3 out of 4 required skills matched

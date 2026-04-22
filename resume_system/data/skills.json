@@ -1,0 +1,26 @@
+{
+  "skills": [
+    "python", "java", "javascript", "typescript", "c", "cpp", "csharp", "go", "rust", "swift",
+    "kotlin", "scala", "ruby", "php", "r", "matlab", "perl", "bash", "shell",
+    "html", "css", "react", "angular", "vue", "nextjs", "nuxtjs", "svelte", "jquery",
+    "bootstrap", "tailwind", "sass", "less", "webpack", "vite", "gatsby",
+    "django", "flask", "fastapi", "express", "nodejs", "spring", "laravel", "rails",
+    "asp", "dotnet", "gin", "fiber",
+    "sql", "mysql", "postgresql", "sqlite", "mongodb", "redis", "cassandra", "dynamodb",
+    "elasticsearch", "neo4j", "influxdb", "mariadb", "oracle",
+    "aws", "azure", "gcp", "docker", "kubernetes", "terraform", "ansible", "jenkins",
+    "github", "gitlab", "bitbucket", "circleci", "travis", "helm",
+    "machine learning", "deep learning", "nlp", "computer vision", "tensorflow", "pytorch",
+    "keras", "scikit", "pandas", "numpy", "matplotlib", "seaborn", "opencv",
+    "hadoop", "spark", "kafka", "airflow", "dbt", "tableau", "powerbi", "looker",
+    "git", "linux", "unix", "windows", "macos", "agile", "scrum", "kanban", "jira",
+    "rest", "graphql", "grpc", "soap", "api", "microservices", "serverless",
+    "cybersecurity", "networking", "devops", "devsecops", "sre", "mlops",
+    "data structures", "algorithms", "system design", "design patterns", "oop",
+    "functional programming", "testing", "junit", "pytest", "selenium", "cypress",
+    "figma", "sketch", "adobe", "ux", "ui", "product management", "roadmap",
+    "communication", "leadership", "teamwork", "problem solving", "analytical",
+    "excel", "word", "powerpoint", "google workspace", "notion", "confluence",
+    "blockchain", "solidity", "web3", "ios", "android", "flutter", "reactnative"
+  ]
+}

@@ -1,49 +1,649 @@
-<div class="card" style="background: white; border-radius: 20px; padding: 40px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
-    <div style="text-align: center;">
-        <div style="font-size: 60px; color: #5a67d8; font-weight: bold;">{{ score }}%</div>
-        <h2 style="color: #2d3748;">Resume Match Accuracy</h2>
+{% extends "base.html" %}
+{% block title %}Analysis Results — AI Resume Analyzer{% endblock %}
+
+{% block head_extra %}
+<style>
+    .results-page {
+        padding: 48px clamp(16px, 4vw, 48px) 80px;
+        max-width: 1100px;
+        margin: 0 auto;
+    }
+
+    /* ── Page header ── */
+    .results-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 16px;
+        margin-bottom: 40px;
+    }
+
+    .results-title { font-size: 1.7rem; font-weight: 800; letter-spacing: -0.03em; }
+    .results-subtitle { color: var(--clr-text-muted); font-size: 0.9rem; margin-top: 4px; }
+
+    /* ── Score Hero ── */
+    .score-hero {
+        background: linear-gradient(135deg, rgba(99,102,241,0.12), rgba(139,92,246,0.1));
+        border: 1px solid rgba(99,102,241,0.25);
+        border-radius: var(--radius-xl);
+        padding: 40px;
+        display: flex;
+        align-items: center;
+        gap: 40px;
+        margin-bottom: 28px;
+        flex-wrap: wrap;
+    }
+
+    .score-ring-container { flex-shrink: 0; position: relative; width: 150px; height: 150px; }
+    .score-ring-svg { rotate: -90deg; }
+
+    .score-ring-text {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .score-val {
+        font-size: 2.6rem;
+        font-weight: 900;
+        letter-spacing: -0.05em;
+        line-height: 1;
+    }
+
+    .score-pct { font-size: 1rem; font-weight: 700; color: var(--clr-text-muted); }
+    .score-label { font-size: 0.7rem; color: var(--clr-text-subtle); letter-spacing: 0.05em; font-weight: 600; margin-top: 2px; }
+
+    .score-info { flex: 1; min-width: 220px; }
+    .score-band {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 16px;
+        border-radius: var(--radius-full);
+        font-size: 0.85rem;
+        font-weight: 700;
+        margin-bottom: 16px;
+    }
+
+    .score-heading {
+        font-size: 1.5rem;
+        font-weight: 800;
+        letter-spacing: -0.03em;
+        margin-bottom: 8px;
+    }
+
+    .score-desc { color: var(--clr-text-muted); font-size: 0.9rem; line-height: 1.65; }
+
+    .score-meta {
+        display: flex;
+        gap: 20px;
+        flex-wrap: wrap;
+        margin-top: 20px;
+    }
+
+    .score-meta-item { text-align: center; }
+    .score-meta-num { font-size: 1.4rem; font-weight: 800; letter-spacing: -0.04em; }
+    .score-meta-label { font-size: 0.73rem; color: var(--clr-text-muted); font-weight: 500; margin-top: 2px; }
+
+    /* ── Two column layout ── */
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 28px; }
+
+    /* ── Skills panels ── */
+    .skills-panel {
+        background: var(--clr-surface);
+        border: 1px solid var(--clr-border-light);
+        border-radius: var(--radius-lg);
+        padding: 24px;
+    }
+
+    .panel-title {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 0.97rem;
+        font-weight: 700;
+        margin-bottom: 16px;
+    }
+
+    .panel-icon {
+        width: 32px; height: 32px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+    }
+
+    .panel-icon-green { background: rgba(16,185,129,0.15); }
+    .panel-icon-red   { background: rgba(239,68,68,0.12); }
+
+    .skill-tags-wrap { display: flex; flex-wrap: wrap; gap: 7px; }
+
+    .skill-chip {
+        padding: 5px 13px;
+        border-radius: var(--radius-full);
+        font-size: 0.78rem;
+        font-weight: 600;
+        letter-spacing: 0.01em;
+    }
+
+    .skill-chip-match {
+        background: rgba(16,185,129,0.12);
+        color: #34d399;
+        border: 1px solid rgba(16,185,129,0.2);
+    }
+
+    .skill-chip-miss {
+        background: rgba(239,68,68,0.1);
+        color: #f87171;
+        border: 1px solid rgba(239,68,68,0.18);
+    }
+
+    .empty-note {
+        color: var(--clr-text-subtle);
+        font-size: 0.85rem;
+        font-style: italic;
+    }
+
+    /* ── AI Suggestions ── */
+    .suggestions-section {
+        background: var(--clr-surface);
+        border: 1px solid var(--clr-border-light);
+        border-radius: var(--radius-lg);
+        padding: 28px;
+        margin-bottom: 28px;
+    }
+
+    .suggestion-card {
+        display: flex;
+        gap: 16px;
+        padding: 18px;
+        background: rgba(255,255,255,0.03);
+        border: 1px solid var(--clr-border-light);
+        border-radius: var(--radius-md);
+        margin-bottom: 12px;
+        transition: border-color var(--transition);
+    }
+
+    .suggestion-card:last-child { margin-bottom: 0; }
+    .suggestion-card:hover { border-color: rgba(99,102,241,0.3); }
+
+    .suggestion-icon {
+        font-size: 24px;
+        flex-shrink: 0;
+        width: 44px; height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(99,102,241,0.08);
+        border-radius: var(--radius-md);
+    }
+
+    .suggestion-body { flex: 1; }
+
+    .suggestion-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 6px;
+        flex-wrap: wrap;
+    }
+
+    .suggestion-title {
+        font-size: 0.92rem;
+        font-weight: 700;
+    }
+
+    .priority-badge {
+        padding: 2px 10px;
+        border-radius: var(--radius-full);
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        flex-shrink: 0;
+    }
+
+    .priority-high   { background: rgba(239,68,68,0.12);  color: #f87171; }
+    .priority-medium { background: rgba(245,158,11,0.12); color: #fbbf24; }
+    .priority-low    { background: rgba(16,185,129,0.12); color: #34d399; }
+
+    .suggestion-msg {
+        font-size: 0.85rem;
+        color: var(--clr-text-muted);
+        line-height: 1.65;
+    }
+
+    /* ── Grammar Report ── */
+    .grammar-section {
+        background: var(--clr-surface);
+        border: 1px solid var(--clr-border-light);
+        border-radius: var(--radius-lg);
+        padding: 28px;
+        margin-bottom: 28px;
+    }
+
+    .grammar-score-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-bottom: 20px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid var(--clr-border-light);
+    }
+
+    .grammar-bar-wrap { flex: 1; min-width: 200px; }
+    .grammar-bar-label {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.8rem;
+        color: var(--clr-text-muted);
+        margin-bottom: 6px;
+    }
+
+    .grammar-bar {
+        height: 8px;
+        background: var(--clr-border);
+        border-radius: 4px;
+        overflow: hidden;
+    }
+
+    .grammar-bar-fill {
+        height: 100%;
+        border-radius: 4px;
+        background: linear-gradient(90deg, var(--clr-brand-from), var(--clr-accent));
+        transition: width 1s ease;
+    }
+
+    .grammar-review {
+        font-size: 0.875rem;
+        color: var(--clr-text-muted);
+        line-height: 1.6;
+        font-style: italic;
+    }
+
+    .grammar-issue {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        padding: 12px 14px;
+        background: rgba(245,158,11,0.06);
+        border: 1px solid rgba(245,158,11,0.15);
+        border-radius: var(--radius-md);
+        margin-top: 10px;
+    }
+
+    .grammar-issue-dot { width: 6px; height: 6px; background: #f59e0b; border-radius: 50%; margin-top: 6px; flex-shrink: 0; }
+    .grammar-issue-msg { font-size: 0.83rem; }
+    .grammar-issue-msg strong { color: var(--clr-text); font-weight: 600; }
+    .grammar-issue-msg span   { color: var(--clr-text-muted); }
+
+    /* ── Jobs Section ── */
+    .jobs-section {
+        background: var(--clr-surface);
+        border: 1px solid var(--clr-border-light);
+        border-radius: var(--radius-lg);
+        padding: 28px;
+        margin-bottom: 28px;
+    }
+
+    .jobs-grid { display: grid; gap: 14px; margin-top: 18px; }
+
+    .job-card {
+        background: rgba(255,255,255,0.03);
+        border: 1px solid var(--clr-border-light);
+        border-radius: var(--radius-md);
+        padding: 18px 20px;
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        transition: all var(--transition);
+        flex-wrap: wrap;
+    }
+
+    .job-card:hover { border-color: rgba(99,102,241,0.35); background: rgba(99,102,241,0.04); }
+
+    .job-logo {
+        width: 46px; height: 46px;
+        border-radius: var(--radius-md);
+        background: linear-gradient(135deg, var(--clr-brand-from), var(--clr-brand-to));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        flex-shrink: 0;
+    }
+
+    .job-info { flex: 1; min-width: 160px; }
+
+    .job-title { font-size: 0.95rem; font-weight: 700; margin-bottom: 4px; }
+
+    .job-meta {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .job-meta-item {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 0.78rem;
+        color: var(--clr-text-muted);
+    }
+
+    .job-apply {
+        padding: 8px 20px;
+        background: rgba(99,102,241,0.12);
+        border: 1.5px solid rgba(99,102,241,0.3);
+        border-radius: var(--radius-full);
+        color: #a5b4fc;
+        font-size: 0.82rem;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all var(--transition);
+        flex-shrink: 0;
+        white-space: nowrap;
+    }
+
+    .job-apply:hover {
+        background: var(--clr-brand-from);
+        color: #fff;
+        border-color: var(--clr-brand-from);
+    }
+
+    .no-jobs {
+        color: var(--clr-text-muted);
+        font-size: 0.9rem;
+        text-align: center;
+        padding: 20px;
+        font-style: italic;
+    }
+
+    /* ── Action buttons ── */
+    .results-actions {
+        display: flex;
+        gap: 14px;
+        flex-wrap: wrap;
+        margin-top: 16px;
+    }
+
+    @media (max-width: 680px) {
+        .two-col { grid-template-columns: 1fr; }
+        .score-hero { flex-direction: column; text-align: center; }
+        .score-meta { justify-content: center; }
+        .results-header { flex-direction: column; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="results-page">
+
+    <!-- ── Header ── -->
+    <div class="results-header animate-fade-up">
+        <div>
+            <h1 class="results-title">Analysis Complete</h1>
+            <p class="results-subtitle">Here's how your resume stacks up against the job description.</p>
+        </div>
+        <div class="results-actions">
+            <a href="{% url 'upload_resume' %}" class="btn btn-secondary btn-sm">Analyze Another</a>
+            {% if user.is_authenticated %}
+                <a href="{% url 'dashboard' %}" class="btn btn-primary btn-sm">Dashboard</a>
+            {% endif %}
+        </div>
     </div>
 
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 30px;">
-        <div style="background: #f0fff4; padding: 20px; border-radius: 12px; border: 1px solid #c6f6d5;">
-            <h3 style="color: #2f855a;">✅ Matched Skills</h3>
-            <div style="margin-top: 10px;">
+    <!-- ── Score Hero ── -->
+    <div class="score-hero animate-fade-up-d1">
+        <!-- Animated SVG Ring -->
+        <div class="score-ring-container">
+            <svg class="score-ring-svg" width="150" height="150" viewBox="0 0 150 150">
+                <!-- Track -->
+                <circle cx="75" cy="75" r="62" fill="none" stroke="rgba(99,102,241,0.12)" stroke-width="12"/>
+                <!-- Progress -->
+                <circle
+                    cx="75" cy="75" r="62"
+                    fill="none"
+                    stroke="url(#scoreGrad)"
+                    stroke-width="12"
+                    stroke-linecap="round"
+                    stroke-dasharray="389.56"
+                    stroke-dashoffset="{{ ring_offset|default:390 }}"
+                    id="scoreArc"
+                    style="transition: stroke-dashoffset 1.2s cubic-bezier(0.4,0,0.2,1);"
+                />
+                <defs>
+                    <linearGradient id="scoreGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" stop-color="#6366f1"/>
+                        <stop offset="100%" stop-color="#06b6d4"/>
+                    </linearGradient>
+                </defs>
+            </svg>
+            <div class="score-ring-text">
+                <span class="score-val" id="scoreVal">0</span>
+                <span class="score-pct">%</span>
+                <span class="score-label">MATCH</span>
+            </div>
+        </div>
+
+        <!-- Score Info -->
+        <div class="score-info">
+            {% if score >= 75 %}
+                <div class="score-band" style="background:rgba(16,185,129,0.15);color:#34d399;">🏆 Excellent Match</div>
+            {% elif score >= 55 %}
+                <div class="score-band" style="background:rgba(6,182,212,0.15);color:#22d3ee;">✅ Good Match</div>
+            {% elif score >= 35 %}
+                <div class="score-band" style="background:rgba(245,158,11,0.15);color:#fbbf24;">⚠️ Needs Improvement</div>
+            {% else %}
+                <div class="score-band" style="background:rgba(239,68,68,0.12);color:#f87171;">❌ Low Match</div>
+            {% endif %}
+
+            <h2 class="score-heading">
+                {% if score >= 75 %}Your resume is a strong fit!
+                {% elif score >= 55 %}Solid match with room to grow.
+                {% elif score >= 35 %}Some gaps need to be addressed.
+                {% else %}Significant revision recommended.
+                {% endif %}
+            </h2>
+
+            <p class="score-desc">
+                Your resume matched <strong>{{ matched|length }}</strong> keywords from the job description.
+                <strong>{{ missing|length }}</strong> keywords are missing.
+                See the suggestions below to improve your score.
+            </p>
+
+            <div class="score-meta">
+                <div class="score-meta-item">
+                    <div class="score-meta-num" style="color:#34d399;">{{ matched|length }}</div>
+                    <div class="score-meta-label">Matched Skills</div>
+                </div>
+                <div class="score-meta-item">
+                    <div class="score-meta-num" style="color:#f87171;">{{ missing|length }}</div>
+                    <div class="score-meta-label">Missing Skills</div>
+                </div>
+                <div class="score-meta-item">
+                    <div class="score-meta-num" style="color:#818cf8;">{{ grammar_score|default:100 }}</div>
+                    <div class="score-meta-label">Grammar Score</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Matched & Missing Skills ── -->
+    <div class="two-col animate-fade-up-d2">
+
+        <div class="skills-panel">
+            <div class="panel-title">
+                <div class="panel-icon panel-icon-green">✅</div>
+                Matched Skills <span class="badge badge-green" style="margin-left:auto;">{{ matched|length }}</span>
+            </div>
+            <div class="skill-tags-wrap">
                 {% for skill in matched %}
-                    <span class="badge" style="background:#d1fae5; color:#065f46; padding:5px 10px; border-radius:15px; margin:3px; display:inline-block;">{{ skill|title }}</span>
+                    <span class="skill-chip skill-chip-match">{{ skill|title }}</span>
                 {% empty %}
-                    <p style="color:#718096; margin:0;">No exact matches found.</p>
+                    <p class="empty-note">No matching keywords found.</p>
                 {% endfor %}
             </div>
         </div>
-        <div style="background: #fff5f5; padding: 20px; border-radius: 12px; border: 1px solid #fed7d7;">
-            <h3 style="color: #c53030;">❌ Missing Skills</h3>
-            <div style="margin-top: 10px;">
+
+        <div class="skills-panel">
+            <div class="panel-title">
+                <div class="panel-icon panel-icon-red">❌</div>
+                Missing Skills <span class="badge badge-red" style="margin-left:auto;">{{ missing|length }}</span>
+            </div>
+            <div class="skill-tags-wrap">
                 {% for skill in missing %}
-                    <span class="badge" style="background:#fed7d7; color:#742a2a; padding:5px 10px; border-radius:15px; margin:3px; display:inline-block;">{{ skill|title }}</span>
+                    <span class="skill-chip skill-chip-miss">{{ skill|title }}</span>
                 {% empty %}
-                    <p style="color:#718096; margin:0;">No missing keywords — good coverage!</p>
+                    <p class="empty-note" style="color:#34d399;">No missing keywords — great coverage!</p>
                 {% endfor %}
             </div>
         </div>
+
     </div>
 
-    <div style="margin-top: 25px; border-left: 5px solid #ed8936; background: #fffaf0; padding: 20px;">
-        <h3 style="color: #9c4221;">✍️ Grammar & Integrity Report</h3>
-        <ul>
-            {% for issue in grammar_issues %}<li><b>{{ issue.message }}:</b> {{ issue.suggestion }}</li>{% empty %}<li>Perfect grammar detected!</li>{% endfor %}
-        </ul>
-    </div>
+    <!-- ── AI Suggestions ── -->
+    {% if suggestions %}
+    <div class="suggestions-section animate-fade-up">
+        <div class="panel-title" style="font-size:1.05rem;margin-bottom:20px;">
+            <div class="panel-icon" style="background:rgba(99,102,241,0.12);">🤖</div>
+            AI-Powered Suggestions
+            <span class="badge badge-indigo" style="margin-left:auto;">{{ suggestions|length }} tips</span>
+        </div>
 
-    <div style="margin-top: 40px;">
-        <h3 style="margin-bottom: 15px;">🚀 Real-Time Job Opportunities</h3>
-        {% for job in jobs %}
-            <div style="background: #f7fafc; padding: 15px; border-radius: 10px; margin-bottom: 10px; border: 1px solid #e2e8f0;">
-                <a href="{{ job.link }}" target="_blank" style="float: right; color:#5a67d8; font-weight:bold; text-decoration:none;">Apply Now →</a>
-                <strong>{{ job.title }}</strong><br>
-                <small>{{ job.company }} • {{ job.location }}</small>
+        {% for s in suggestions %}
+        <div class="suggestion-card">
+            <div class="suggestion-icon">{{ s.icon }}</div>
+            <div class="suggestion-body">
+                <div class="suggestion-header">
+                    <div class="suggestion-title">{{ s.title }}</div>
+                    <span class="priority-badge priority-{{ s.priority|lower }}">{{ s.priority }}</span>
+                </div>
+                <p class="suggestion-msg">{{ s.message }}</p>
             </div>
-        {% empty %}
-            <p style="color:#718096;">Searching for live links... Try adding more keywords to your resume.</p>
+        </div>
         {% endfor %}
     </div>
+    {% endif %}
+
+    <!-- ── Grammar Report ── -->
+    <div class="grammar-section animate-fade-up">
+        <div class="panel-title" style="font-size:1.05rem;margin-bottom:20px;">
+            <div class="panel-icon" style="background:rgba(245,158,11,0.12);">✍️</div>
+            Grammar & Language Report
+        </div>
+
+        <div class="grammar-score-row">
+            <div class="grammar-bar-wrap">
+                <div class="grammar-bar-label">
+                    <span>Grammar Score</span>
+                    <span style="font-weight:700;color:var(--clr-text);">{{ grammar_score|default:100 }} / 100</span>
+                </div>
+                <div class="grammar-bar">
+                    <div class="grammar-bar-fill" id="grammarBar" style="width:0%;"></div>
+                </div>
+            </div>
+        </div>
+
+        {% if grammar_review %}
+            <p class="grammar-review">💬 {{ grammar_review }}</p>
+        {% endif %}
+
+        {% for issue in grammar_issues %}
+        <div class="grammar-issue">
+            <div class="grammar-issue-dot"></div>
+            <div class="grammar-issue-msg">
+                <strong>{{ issue.message }}:</strong>
+                <span> {{ issue.suggestion }}</span>
+            </div>
+        </div>
+        {% empty %}
+        <div style="margin-top:14px;" class="flash flash-success">
+            No grammar issues detected - your resume reads clearly and professionally!
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- ── Live Jobs ── -->
+    <div class="jobs-section animate-fade-up">
+        <div class="panel-title" style="font-size:1.05rem;">
+            <div class="panel-icon" style="background:rgba(6,182,212,0.12);">💼</div>
+            Live Job Opportunities
+            {% if jobs %}
+                <span class="badge badge-cyan" style="margin-left:auto;">{{ jobs|length }} listings</span>
+            {% endif %}
+        </div>
+        <p style="color:var(--clr-text-muted);font-size:0.85rem;margin-bottom:4px;">Matched to your detected skills in real-time.</p>
+
+        <div class="jobs-grid">
+            {% for job in jobs %}
+            <div class="job-card">
+                <div class="job-logo">🏢</div>
+                <div class="job-info">
+                    <div class="job-title">{{ job.title }}</div>
+                    <div class="job-meta">
+                        <div class="job-meta-item">🏛 {{ job.company }}</div>
+                        <div class="job-meta-item">📍 {{ job.location }}</div>
+                        {% if job.salary %}
+                            <div class="job-meta-item">💰 {{ job.salary }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                <a href="{{ job.link }}" target="_blank" rel="noopener noreferrer" class="job-apply">
+                    Apply Now →
+                </a>
+            </div>
+            {% empty %}
+            <p class="no-jobs">No job listings found. Try uploading a more detailed resume or job description.</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- ── Bottom Actions ── -->
+    <div class="results-actions animate-fade-up">
+        <a href="{% url 'upload_resume' %}" class="btn btn-primary">Analyze Another Resume</a>
+        {% if user.is_authenticated %}
+            <a href="{% url 'dashboard' %}" class="btn btn-secondary">View My Dashboard</a>
+        {% endif %}
+    </div>
+
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const SCORE = Number("{{ score|default:0 }}");
+    const GRAMMAR = Number("{{ grammar_score|default:100 }}");
+    const CIRCUMFERENCE = 389.56;
+
+    // Animate score ring on load
+    window.addEventListener('load', () => {
+        const offset = CIRCUMFERENCE - (SCORE / 100) * CIRCUMFERENCE;
+        document.getElementById('scoreArc').style.strokeDashoffset = offset;
+
+        // Count-up animation for score number
+        let current = 0;
+        const duration = 1200;
+        const step = SCORE / (duration / 16);
+        const counter = setInterval(() => {
+            current = Math.min(current + step, SCORE);
+            document.getElementById('scoreVal').textContent = Math.round(current);
+            if (current >= SCORE) clearInterval(counter);
+        }, 16);
+
+        // Grammar bar
+        setTimeout(() => {
+            document.getElementById('grammarBar').style.width = GRAMMAR + '%';
+        }, 300);
+    });
+</script>
+{% endblock %}

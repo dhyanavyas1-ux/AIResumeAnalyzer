@@ -1,232 +1,302 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - AI Resume Analyzer</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+{% extends "base.html" %}
+{% block title %}Login — AI Resume Analyzer{% endblock %}
+{% block nav_login %}active{% endblock %}
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
+{% block head_extra %}
+<style>
+    .auth-page {
+        min-height: calc(100vh - var(--nav-height));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 40px 16px;
+        background: radial-gradient(ellipse 60% 60% at 80% 40%, rgba(99,102,241,0.12) 0%, transparent 70%);
+    }
 
-        .container {
-            display: flex;
-            max-width: 1000px;
-            width: 90%;
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-            overflow: hidden;
-        }
+    .auth-wrapper {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        max-width: 920px;
+        width: 100%;
+        background: var(--clr-surface);
+        border: 1px solid var(--clr-border-light);
+        border-radius: var(--radius-xl);
+        overflow: hidden;
+        box-shadow: var(--shadow-lg);
+    }
 
-        .left-section {
-            flex: 1;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 50px 40px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: flex-start;
-        }
+    /* Left panel */
+    .auth-panel-left {
+        background: linear-gradient(145deg, #1a1f3c, #0d1224);
+        padding: 48px 40px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        position: relative;
+        overflow: hidden;
+    }
 
-        .left-section h1 {
-            font-size: 32px;
-            margin-bottom: 20px;
-            font-weight: 700;
-        }
+    .auth-panel-left::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(ellipse 80% 60% at 30% 60%, rgba(99,102,241,0.2) 0%, transparent 70%);
+        pointer-events: none;
+    }
 
-        .left-section p {
-            font-size: 16px;
-            line-height: 1.6;
-            margin-bottom: 30px;
-            opacity: 0.95;
-        }
+    .auth-left-title {
+        font-size: 1.7rem;
+        font-weight: 800;
+        letter-spacing: -0.03em;
+        line-height: 1.2;
+        margin-bottom: 16px;
+        position: relative;
+    }
 
-        .features {
-            list-style: none;
-        }
+    .auth-left-desc {
+        color: var(--clr-text-muted);
+        font-size: 0.9rem;
+        line-height: 1.7;
+        margin-bottom: 32px;
+        position: relative;
+    }
 
-        .features li {
-            margin-bottom: 15px;
-            padding-left: 30px;
-            position: relative;
-            font-size: 14px;
-        }
+    .auth-feature-list {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        position: relative;
+    }
 
-        .features li:before {
-            content: '✓';
-            position: absolute;
-            left: 0;
-            font-weight: bold;
-            font-size: 18px;
-        }
+    .auth-feature-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 0.87rem;
+        color: var(--clr-text-muted);
+    }
 
-        .right-section {
-            flex: 1;
-            padding: 50px 40px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-        }
+    .auth-feature-check {
+        width: 24px; height: 24px;
+        background: rgba(16,185,129,0.15);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #34d399;
+        font-size: 0.75rem;
+        flex-shrink: 0;
+    }
 
-        .right-section h2 {
-            font-size: 28px;
-            color: #333;
-            margin-bottom: 30px;
-            text-align: center;
-        }
+    /* Right panel (form) */
+    .auth-panel-right {
+        padding: 48px 40px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
 
-        .form-group {
-            margin-bottom: 20px;
-        }
+    .auth-form-title {
+        font-size: 1.5rem;
+        font-weight: 800;
+        letter-spacing: -0.03em;
+        margin-bottom: 6px;
+    }
 
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            color: #555;
-            font-weight: 500;
-            font-size: 14px;
-        }
+    .auth-form-subtitle {
+        color: var(--clr-text-muted);
+        font-size: 0.87rem;
+        margin-bottom: 32px;
+    }
 
-        .form-group input {
-            width: 100%;
-            padding: 12px 15px;
-            border: 2px solid #e0e0e0;
-            border-radius: 5px;
-            font-size: 14px;
-            transition: border-color 0.3s;
-        }
+    .form-group { margin-bottom: 20px; }
 
-        .form-group input:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-        }
+    .input-wrap {
+        position: relative;
+    }
 
-        .submit-btn {
-            width: 100%;
-            padding: 12px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 5px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            margin-top: 10px;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
+    .input-wrap .form-input {
+        padding-left: 44px;
+    }
 
-        .submit-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
-        }
+    .input-icon {
+        position: absolute;
+        left: 14px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 16px;
+        color: var(--clr-text-subtle);
+        pointer-events: none;
+    }
 
-        .signup-link {
-            text-align: center;
-            margin-top: 20px;
-            color: #666;
-            font-size: 14px;
-        }
+    .show-pass-btn {
+        position: absolute;
+        right: 14px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: var(--clr-text-subtle);
+        font-size: 0.78rem;
+        font-weight: 600;
+        letter-spacing: 0.03em;
+        transition: color var(--transition);
+    }
 
-        .signup-link a {
-            color: #667eea;
-            text-decoration: none;
-            font-weight: 600;
-            transition: color 0.3s;
-        }
+    .show-pass-btn:hover { color: var(--clr-brand-from); }
 
-        .signup-link a:hover {
-            color: #764ba2;
-        }
+    .auth-submit {
+        width: 100%;
+        padding: 14px;
+        background: linear-gradient(135deg, var(--clr-brand-from), var(--clr-brand-to));
+        color: #fff;
+        border: none;
+        border-radius: var(--radius-full);
+        font-size: 0.95rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all var(--transition);
+        margin-top: 8px;
+        letter-spacing: 0.02em;
+    }
 
-        .error-message {
-            background: #f8d7da;
-            color: #721c24;
-            padding: 12px;
-            border-radius: 5px;
-            margin-bottom: 20px;
-            text-align: center;
-            font-size: 14px;
-            display: none;
-        }
+    .auth-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-brand);
+    }
 
-        @media (max-width: 768px) {
-            .container {
-                flex-direction: column;
-            }
+    .auth-switch {
+        text-align: center;
+        margin-top: 22px;
+        font-size: 0.85rem;
+        color: var(--clr-text-muted);
+    }
 
-            .left-section {
-                padding: 30px 20px;
-                text-align: center;
-            }
+    .auth-switch a {
+        color: var(--clr-brand-from);
+        font-weight: 600;
+        transition: color var(--transition);
+    }
 
-            .left-section h1 {
-                font-size: 24px;
-            }
+    .auth-switch a:hover { color: var(--clr-brand-to); }
 
-            .right-section {
-                padding: 30px 20px;
-            }
+    @media (max-width: 680px) {
+        .auth-wrapper { grid-template-columns: 1fr; }
+        .auth-panel-left { display: none; }
+        .auth-panel-right { padding: 36px 24px; }
+    }
+</style>
+{% endblock %}
 
-            .right-section h2 {
-                font-size: 22px;
-            }
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="left-section">
-            <h1>🚀 Resume Analyzer AI</h1>
-            <p>Unlock your potential with intelligent resume analysis powered by artificial intelligence and machine learning.</p>
-            <ul class="features">
-                <li>Smart Resume Analysis</li>
-                <li>AI-Powered Skill Detection</li>
-                <li>Personalized Job Recommendations</li>
-                <li>Real-time Feedback</li>
-                <li>Career Insights</li>
-                <li>Secure Account Management</li>
+{% block content %}
+<div class="auth-page">
+    <div class="auth-wrapper animate-fade-up">
+
+        <!-- Left: Branding Panel -->
+        <div class="auth-panel-left">
+            <div class="auth-left-title">
+                Welcome back to<br>
+                <span class="gradient-text">AIResumeAnalyzer</span>
+            </div>
+            <p class="auth-left-desc">
+                Sign in to access your resume history, track your improvement score over time, and get new AI-powered analysis.
+            </p>
+            <ul class="auth-feature-list">
+                <li class="auth-feature-item">
+                    <div class="auth-feature-check">✓</div>
+                    Instant AI resume scoring & gap analysis
+                </li>
+                <li class="auth-feature-item">
+                    <div class="auth-feature-check">✓</div>
+                    ATS optimization recommendations
+                </li>
+                <li class="auth-feature-item">
+                    <div class="auth-feature-check">✓</div>
+                    Live job listings matched to your skills
+                </li>
+                <li class="auth-feature-item">
+                    <div class="auth-feature-check">✓</div>
+                    Track progress across multiple analyses
+                </li>
             </ul>
         </div>
 
-        <div class="right-section">
-            <h2>Welcome Back</h2>
-            <form method="post">
+        <!-- Right: Login Form -->
+        <div class="auth-panel-right">
+            <h1 class="auth-form-title">Sign In</h1>
+            <p class="auth-form-subtitle">Enter your email and password to continue.</p>
+
+            {% if error %}
+                <div class="flash flash-error">{{ error }}</div>
+            {% endif %}
+
+            <form method="POST" id="loginForm">
                 {% csrf_token %}
-                {% if error %}
-                <div class="error-message" style="display: block;">{{ error }}</div>
-                {% endif %}
-                
-                <div class="form-group">
-                    <label for="email">Email Address</label>
-                    <input type="email" id="email" name="email" required placeholder="Enter your email">
-                </div>
 
                 <div class="form-group">
-                    <label for="password">Password</label>
-                    <input type="password" id="password" name="password" required placeholder="Enter your password">
+                    <label class="form-label" for="email">Email Address</label>
+                    <div class="input-wrap">
+                        <span class="input-icon">📧</span>
+                        <input
+                            type="email"
+                            id="email"
+                            name="email"
+                            class="form-input"
+                            placeholder="you@example.com"
+                            required
+                            autocomplete="email"
+                        >
+                    </div>
                 </div>
 
-                <button type="submit" class="submit-btn">Login</button>
-
-                <div class="signup-link">
-                    Don't have an account? <a href="{% url 'register' %}">Sign up here</a>
+                <div class="form-group">
+                    <label class="form-label" for="password">Password</label>
+                    <div class="input-wrap">
+                        <span class="input-icon">🔒</span>
+                        <input
+                            type="password"
+                            id="password"
+                            name="password"
+                            class="form-input"
+                            placeholder="Enter your password"
+                            required
+                            autocomplete="current-password"
+                        >
+                        <button type="button" class="show-pass-btn" id="togglePass">SHOW</button>
+                    </div>
                 </div>
+
+                <button type="submit" class="auth-submit" id="loginBtn">
+                    Sign In →
+                </button>
             </form>
+
+            <p class="auth-switch">
+                Don't have an account? <a href="{% url 'register' %}">Create one free</a>
+            </p>
         </div>
     </div>
-</body>
-</html>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Show / hide password toggle
+    const toggle = document.getElementById('togglePass');
+    const passField = document.getElementById('password');
+    toggle.addEventListener('click', () => {
+        const isPass = passField.type === 'password';
+        passField.type = isPass ? 'text' : 'password';
+        toggle.textContent = isPass ? 'HIDE' : 'SHOW';
+    });
+
+    // Button loading state on submit
+    document.getElementById('loginForm').addEventListener('submit', () => {
+        const btn = document.getElementById('loginBtn');
+        btn.textContent = 'Signing in…';
+        btn.style.opacity = '0.7';
+        btn.disabled = true;
+    });
+</script>
+{% endblock %}

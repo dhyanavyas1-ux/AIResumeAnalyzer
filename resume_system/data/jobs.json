@@ -1,0 +1,82 @@
+[
+  {
+    "title": "Python Backend Developer",
+    "company": "TCS",
+    "location": "Bengaluru, India",
+    "skills": ["python", "django", "rest", "sql", "git", "docker"],
+    "apply_link": "https://ibegin.tcs.com/iBegin/",
+    "salary": "₹6–12 LPA"
+  },
+  {
+    "title": "Data Scientist",
+    "company": "Infosys",
+    "location": "Hyderabad, India",
+    "skills": ["python", "machine learning", "pandas", "numpy", "scikit", "sql"],
+    "apply_link": "https://career.infosys.com/",
+    "salary": "₹8–16 LPA"
+  },
+  {
+    "title": "Frontend Developer",
+    "company": "Wipro",
+    "location": "Pune, India",
+    "skills": ["html", "css", "javascript", "react", "typescript", "git"],
+    "apply_link": "https://careers.wipro.com/",
+    "salary": "₹5–10 LPA"
+  },
+  {
+    "title": "Full Stack Developer",
+    "company": "HCL Technologies",
+    "location": "Noida, India",
+    "skills": ["python", "javascript", "react", "django", "sql", "docker"],
+    "apply_link": "https://www.hcltech.com/careers",
+    "salary": "₹7–14 LPA"
+  },
+  {
+    "title": "Machine Learning Engineer",
+    "company": "Accenture",
+    "location": "Bengaluru, India",
+    "skills": ["python", "tensorflow", "pytorch", "machine learning", "deep learning", "aws"],
+    "apply_link": "https://www.accenture.com/in-en/careers",
+    "salary": "₹10–20 LPA"
+  },
+  {
+    "title": "DevOps Engineer",
+    "company": "Tech Mahindra",
+    "location": "Bengaluru, India",
+    "skills": ["docker", "kubernetes", "aws", "terraform", "jenkins", "linux"],
+    "apply_link": "https://careers.techmahindra.com/",
+    "salary": "₹8–15 LPA"
+  },
+  {
+    "title": "Data Analyst",
+    "company": "Capgemini",
+    "location": "Mumbai, India",
+    "skills": ["sql", "python", "excel", "tableau", "powerbi", "pandas"],
+    "apply_link": "https://www.capgemini.com/in-en/careers/",
+    "salary": "₹5–9 LPA"
+  },
+  {
+    "title": "Java Developer",
+    "company": "Cognizant",
+    "location": "Chennai, India",
+    "skills": ["java", "spring", "sql", "microservices", "rest", "git"],
+    "apply_link": "https://careers.cognizant.com/",
+    "salary": "₹6–13 LPA"
+  },
+  {
+    "title": "Cloud Engineer",
+    "company": "IBM India",
+    "location": "Bengaluru, India",
+    "skills": ["aws", "azure", "gcp", "terraform", "docker", "kubernetes"],
+    "apply_link": "https://www.ibm.com/in-en/employment/",
+    "salary": "₹9–18 LPA"
+  },
+  {
+    "title": "NLP Engineer",
+    "company": "Mu Sigma",
+    "location": "Bengaluru, India",
+    "skills": ["python", "nlp", "tensorflow", "machine learning", "pandas", "scikit"],
+    "apply_link": "https://www.mu-sigma.com/careers",
+    "salary": "₹8–16 LPA"
+  }
+]
